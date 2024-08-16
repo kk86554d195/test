@@ -80,4 +80,3 @@
 {"name":"國泰街素食","description":"","imageUrl":"https://lh5.googleusercontent.com/p/AF1QipNlUuSFCN5AIGR4o9tbsbx5FArKIR58-KQXHGEp=w426-h240-k-no","features":["餐廳","全素","蛋奶","五辛","新北","板橋區"],"address":"新北市板橋區國泰街98號","menuImages": [],"priceLevel": 2,"openingHours": "","contactNumber": ""}
 {"name":"民治豆漿素食早餐","description":"","imageUrl":"https://lh5.googleusercontent.com/p/AF1QipNwrr9UD8qiFHJHrD2tPMvJjk7ujxZLOCqwL8oi=w408-h306-k-no","features":["餐廳","全素","蛋奶","五辛","新北","中和區"],"address":"新北市中和區自治街48號1樓","menuImages": [],"priceLevel": 2,"openingHours": "","contactNumber": ""}
 {"name":"素食早餐","description":"","imageUrl":"https://lh5.googleusercontent.com/p/AF1QipPYQ8Igc-2aS6gDSoEMmBKeIhBAZ8G489IUh604=w408-h306-k-no","features":["餐廳","全素","蛋奶","五辛","新北","中和區"],"address":"新北市中和區民德路264號","menuImages": [],"priceLevel": 2,"openingHours": "","contactNumber": ""}
-]
