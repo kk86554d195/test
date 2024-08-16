@@ -4,11 +4,7 @@ const path = require('path');
 
 const app = express();  // 初始化 Express 應用
 
-// 設定檔案路徑
-const dataFile = path.join(__dirname, 'data.txt');  
-
-// 檢查文件路徑是否正確
-console.log('Data file path:', dataFile);
+const dataFile = path.join(__dirname, 'data.txt');  // 設定檔案路徑
 
 app.get('/api/get-data', (req, res) => {
   console.log('嘗試讀取檔案:', dataFile);
@@ -16,7 +12,7 @@ app.get('/api/get-data', (req, res) => {
   fs.readFile(dataFile, 'utf8', (err, data) => {
     if (err) {
       console.error('無法讀取檔案:', err);
-      res.status(500).send('伺服器錯誤: ' + err.message);
+      res.status(500).send('伺服器錯誤');
       return;
     }
 
@@ -27,8 +23,7 @@ app.get('/api/get-data', (req, res) => {
       try {
         return JSON.parse(line);
       } catch (e) {
-        console.error('JSON 解析錯誤在行:', line);
-        console.error('錯誤訊息:', e.message);
+        console.error('JSON 解析錯誤:', e);
         return null;
       }
     }).filter(item => item !== null);
@@ -41,5 +36,4 @@ const PORT = process.env.PORT || 3000;  // 設定伺服器的端口
 
 app.listen(PORT, () => {
   console.log(`伺服器正在運行在端口 ${PORT}`);
-  console.log('Current directory:', __dirname);  // 確認伺服器的工作目錄
 });
