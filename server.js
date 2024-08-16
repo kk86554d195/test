@@ -1,7 +1,12 @@
-app.get('/api/get-data', (req, res) => {
-  const path = require('path');
-  const dataFile = path.join(__dirname, 'data.txt');
+const express = require('express');
+const fs = require('fs');
+const path = require('path');
 
+const app = express();  // 初始化 Express 應用
+
+const dataFile = path.join(__dirname, 'data.txt');  // 設定檔案路徑
+
+app.get('/api/get-data', (req, res) => {
   console.log('嘗試讀取檔案:', dataFile);
 
   fs.readFile(dataFile, 'utf8', (err, data) => {
@@ -25,4 +30,10 @@ app.get('/api/get-data', (req, res) => {
 
     res.status(200).json(jsonData);
   });
+});
+
+const PORT = process.env.PORT || 3000;  // 設定伺服器的端口
+
+app.listen(PORT, () => {
+  console.log(`伺服器正在運行在端口 ${PORT}`);
 });
