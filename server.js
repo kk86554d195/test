@@ -15,7 +15,7 @@ app.get('/api/get-data', (req, res) => {
   fs.readFile(storeDataFile, 'utf8', (err, data) => {
     if (err) {
       console.error('无法读取商店数据文件:', err);
-      res.status(500).send('服务器错误');
+      res.status(500).send('无法读取商店数据文件-服务器错误');
       return;
     }
 
@@ -43,7 +43,7 @@ app.post('/api/login', (req, res) => {
   fs.readFile(profileDataFile, 'utf8', (err, data) => {
     if (err) {
       console.error('無法讀取用戶數據文件:', err);
-      res.status(500).send('伺服器錯誤');
+      res.status(500).send('無法讀取用戶數據文件-伺服器錯誤');
       return;
     }
 
@@ -54,7 +54,7 @@ app.post('/api/login', (req, res) => {
       users = data.trim().split('\n').map(line => JSON.parse(line));
     } catch (parseErr) {
       console.error('解析用戶數據時出錯:', parseErr);
-      res.status(500).send('伺服器錯誤');
+      res.status(500).send('解析用戶數據時出錯-伺服器錯誤');
       return;
     }
 
