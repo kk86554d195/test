@@ -1,5 +1,2 @@
-事實上是 2024/8/16 上午3:13:13
-完完全全情況 2024/8/16 上午3:13:17
-只是事實上是 2024/8/16 上午3:13:54
-時尚購物文字 2024/8/16 上午3:14:03
-至創造出 2024/8/16 上午3:14:16
+{"name":"得來素","description":"得來素是一間充滿溫馨氛圍的素食早餐店","imageUrl":"https://example.com/image.jpg","features":["全素","早餐","蛋奶"],"address":"新北市樹林區復興路306號","menuImages":[],"priceLevel":1,"openingHours":{"星期一":"08:00-18:00","星期二":"08:00-18:00"},"contactNumber":"0935782814"}
+{"name":"Burger美式蔬食漢堡","description":"速食","imageUrl":"https://example.com/image2.jpg","features":["台北市","漢堡","全素","蛋奶"],"address":"台北市北投區中央南路二段36-1號","menuImages":[],"priceLevel":2,"contactNumber":"0935782814"}
