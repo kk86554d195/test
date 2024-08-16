@@ -5,10 +5,10 @@ const path = require('path');
 const app = express();
 const cors = require('cors');
 app.use(cors());
-app.use(express.json());
+app.use(express.json());  // 解析 JSON 请求
 
-const storeDataFile = path.join(__dirname, 'store_data.txt');
-const profileDataFile = path.join(__dirname, 'profile_data.txt');
+const storeDataFile = path.join(__dirname, 'store_data.txt'); // 商店数据文件路径
+const profileDataFile = path.join(__dirname, 'profile_data.txt'); // 用户数据文件路径
 
 // 获取商店数据
 app.get('/api/get-data', (req, res) => {
@@ -48,7 +48,7 @@ app.post('/api/login', (req, res) => {
     const user = users.find(user => user.username === username);
 
     if (user && user.password === password) {
-      res.status(200).json({ success: true, memberName: user.memberName });
+      res.status(200).json({ success: true, username: user.username });
     } else {
       res.status(401).json({ success: false, message: '用户名或密码错误' });
     }
