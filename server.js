@@ -3,8 +3,8 @@ const fs = require('fs');
 const path = require('path');
 
 const app = express();
-//const cors = require('cors');
-//app.use(cors());
+const cors = require('cors');
+app.use(cors());
 app.use(express.json());
 
 const storeDataFile = path.join(__dirname, 'store_data.txt');
@@ -37,20 +37,47 @@ app.get('/api/get-data', (req, res) => {
 app.post('/api/login', (req, res) => {
   const { username, password } = req.body;
 
+  // 打印接收到的用户名和密码，帮助调试
+  console.log('Received login request:', { username, password });
+
   fs.readFile(profileDataFile, 'utf8', (err, data) => {
     if (err) {
-      console.error('无法读取用户数据文件:', err);
-      res.status(500).send('服务器错误');
+      console.error('無法讀取用戶數據文件:', err);
+      res.status(500).send('伺服器錯誤');
       return;
     }
 
-    const users = data.trim().split('\n').map(line => JSON.parse(line));
+    console.log('讀取到的用戶數據文件內容:', data);
+
+    let users;
+    try {
+      users = data.trim().split('\n').map(line => JSON.parse(line));
+    } catch (parseErr) {
+      console.error('解析用戶數據時出錯:', parseErr);
+      res.status(500).send('伺服器錯誤');
+      return;
+    }
+
+    console.log('解析後的用戶數據:', users);
+
     const user = users.find(user => user.username === username);
 
-    if (user && user.password === password) {
+    if (!user) {
+      console.error('用戶名不存在:', username);
+      res.status(401).json({ success: false, message: '用戶名或密碼錯誤' });
+      return;
+    }
+
+    if (user.password === password) {
       res.status(200).json({ success: true, memberName: user.memberName });
     } else {
-      res.status(401).json({ success: false, message: '用户名或密码错误' });
+      console.error('密碼錯誤:', password);
+      res.status(401).json({ success: false, message: '用戶名或密碼錯誤' });
     }
   });
+});
+
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => {
+  console.log(`服务器正在运行在端口 ${PORT}`);
 });
