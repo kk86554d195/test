@@ -1,12 +1,18 @@
 app.get('/api/get-data', (req, res) => {
+  const path = require('path');
+  const dataFile = path.join(__dirname, 'data.txt');
+
+  console.log('嘗試讀取檔案:', dataFile);
+
   fs.readFile(dataFile, 'utf8', (err, data) => {
     if (err) {
       console.error('無法讀取檔案:', err);
       res.status(500).send('伺服器錯誤');
       return;
     }
-    
-    // 將每一行資料解析成 JSON 格式
+
+    console.log('檔案讀取成功');
+
     const lines = data.trim().split('\n');
     const jsonData = lines.map(line => {
       try {
@@ -16,8 +22,7 @@ app.get('/api/get-data', (req, res) => {
         return null;
       }
     }).filter(item => item !== null);
-    
-    // 直接返回解析後的 JSON 資料列表
+
     res.status(200).json(jsonData);
   });
 });
