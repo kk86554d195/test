@@ -32,7 +32,7 @@ app.get('/api/get-data', (req, res) => {
   });
 });
 
-const PORT = process.env.PORT || 3000;  // 設定伺服器的端口
+const PORT = process.env.PORT || 8080;  // 設定伺服器的端口
 
 app.listen(PORT, () => {
   console.log(`伺服器正在運行在端口 ${PORT}`);
