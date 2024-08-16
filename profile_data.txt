@@ -1,2 +1,6 @@
 {"username": "user1", "password": "pass1", "memberName": "John Doe"}
-{"username": "user2", "password": "pass2", "memberName": "Jane Smith"}
+{"username": "user2", "password": "pass2", "memberName": "Jane Smit"}
+{"username": "user3", "password": "pass3", "memberName": "John Do"}
+{"username": "user4", "password": "pass4", "memberName": "Janeith"}
+{"username": "user5", "password": "pass5", "memberName": "JohDoe"}
+{"username": "user6", "password": "pass6", "memberName": "Jath"}
