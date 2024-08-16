@@ -2,10 +2,10 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 
-//const app = express();
-const cors = require('cors');
-app.use(cors());
-//app.use(express.json());
+const app = express();
+//const cors = require('cors');
+//app.use(cors());
+app.use(express.json());
 
 const storeDataFile = path.join(__dirname, 'store_data.txt');
 const profileDataFile = path.join(__dirname, 'profile_data.txt');
