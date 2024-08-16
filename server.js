@@ -5,7 +5,8 @@ const path = require('path');
 const app = express();  // 初始化 Express 應用
 
 const dataFile = path.join(__dirname, 'data.txt');  // 設定檔案路徑
-
+const cors = require('cors');
+app.use(cors());
 app.get('/api/get-data', (req, res) => {
   console.log('嘗試讀取檔案:', dataFile);
 
