@@ -2,29 +2,29 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 
-const app = express();  // 初始化 Express 應用
-
-const dataFile = path.join(__dirname, 'data.txt');  // 設定檔案路徑
+const app = express();
 const cors = require('cors');
 app.use(cors());
-app.get('/api/get-data', (req, res) => {
-  console.log('嘗試讀取檔案:', dataFile);
+app.use(express.json());  // 解析 JSON 请求
 
-  fs.readFile(dataFile, 'utf8', (err, data) => {
+const storeDataFile = path.join(__dirname, 'store_data.txt'); // 商店数据文件路径
+const profileDataFile = path.join(__dirname, 'profile_data.txt'); // 用户数据文件路径
+
+// 获取商店数据
+app.get('/api/get-data', (req, res) => {
+  fs.readFile(storeDataFile, 'utf8', (err, data) => {
     if (err) {
-      console.error('無法讀取檔案:', err);
-      res.status(500).send('伺服器錯誤');
+      console.error('无法读取商店数据文件:', err);
+      res.status(500).send('服务器错误');
       return;
     }
-
-    console.log('檔案讀取成功');
 
     const lines = data.trim().split('\n');
     const jsonData = lines.map(line => {
       try {
         return JSON.parse(line);
       } catch (e) {
-        console.error('JSON 解析錯誤:', e);
+        console.error('JSON 解析错误:', e);
         return null;
       }
     }).filter(item => item !== null);
@@ -33,8 +33,29 @@ app.get('/api/get-data', (req, res) => {
   });
 });
 
-const PORT = process.env.PORT || 8080;  // 設定伺服器的端口
+// 处理用户登录
+app.post('/api/login', (req, res) => {
+  const { username, password } = req.body;
 
+  fs.readFile(profileDataFile, 'utf8', (err, data) => {
+    if (err) {
+      console.error('无法读取用户数据文件:', err);
+      res.status(500).send('服务器错误');
+      return;
+    }
+
+    const users = data.trim().split('\n').map(line => JSON.parse(line));
+    const user = users.find(user => user.username === username);
+
+    if (user && user.password === password) {
+      res.status(200).json({ success: true, username: user.username });
+    } else {
+      res.status(401).json({ success: false, message: '用户名或密码错误' });
+    }
+  });
+});
+
+const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
-  console.log(`伺服器正在運行在端口 ${PORT}`);
+  console.log(`服务器正在运行在端口 ${PORT}`);
 });
