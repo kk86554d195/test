@@ -9,6 +9,7 @@ app.use(express.json());
 
 const storeDataFile = path.join(__dirname, 'store_data.txt');
 const profileDataFile = path.join(__dirname, 'profile_data.txt');
+const reviewsDataFile = path.join(__dirname, 'reviews_data.txt');
 
 // 获取商店数据
 app.get('/api/get-data', (req, res) => {
@@ -37,43 +38,100 @@ app.get('/api/get-data', (req, res) => {
 app.post('/api/login', (req, res) => {
   const { username, password } = req.body;
 
-  // 打印接收到的用户名和密码，帮助调试
-  console.log('Received login request:', { username, password });
-
   fs.readFile(profileDataFile, 'utf8', (err, data) => {
     if (err) {
-      console.error('無法讀取用戶數據文件:', err);
-      res.status(500).send('無法讀取用戶數據文件-伺服器錯誤');
+      res.status(500).send('无法读取用户数据文件');
       return;
     }
 
-    console.log('讀取到的用戶數據文件內容:', data);
-
-    let users;
-    try {
-      users = data.trim().split('\n').map(line => JSON.parse(line));
-    } catch (parseErr) {
-      console.error('解析用戶數據時出錯:', parseErr);
-      res.status(500).send('解析用戶數據時出錯-伺服器錯誤');
-      return;
-    }
-
-    console.log('解析後的用戶數據:', users);
-
+    const users = data.trim().split('\n').map(line => JSON.parse(line));
     const user = users.find(user => user.username === username);
 
     if (!user) {
-      console.error('用戶名不存在:', username);
-      res.status(401).json({ success: false, message: '用戶名或密碼錯誤' });
+      res.status(401).json({ success: false, message: '用户名或密码错误' });
+    } else if (user.password === password) {
+      res.status(200).json({ success: true, memberName: user.memberName, favorites: user.favorites || [] });
+    } else {
+      res.status(401).json({ success: false, message: '用户名或密码错误' });
+    }
+  });
+});
+
+// 保存用户资料
+app.post('/api/save-profile', (req, res) => {
+  const { username, memberName, favorites } = req.body;
+
+  fs.readFile(profileDataFile, 'utf8', (err, data) => {
+    if (err) {
+      res.status(500).send('无法读取用户数据文件');
       return;
     }
 
-    if (user.password === password) {
-      res.status(200).json({ success: true, memberName: user.memberName });
+    let users = data.trim().split('\n').map(line => JSON.parse(line));
+    const userIndex = users.findIndex(user => user.username === username);
+
+    if (userIndex !== -1) {
+      users[userIndex] = { ...users[userIndex], memberName, favorites };
     } else {
-      console.error('密碼錯誤:', password);
-      res.status(401).json({ success: false, message: '用戶名或密碼錯誤' });
+      users.push({ username, memberName, favorites });
     }
+
+    fs.writeFile(profileDataFile, users.map(user => JSON.stringify(user)).join('\n') + '\n', 'utf8', err => {
+      if (err) {
+        res.status(500).send('无法保存用户数据');
+        return;
+      }
+      res.status(200).send('用户数据保存成功');
+    });
+  });
+});
+
+// 获取评论数据
+app.get('/api/get-reviews', (req, res) => {
+  fs.readFile(reviewsDataFile, 'utf8', (err, data) => {
+    if (err) {
+      res.status(500).send('无法读取评论数据文件');
+      return;
+    }
+
+    const reviews = JSON.parse(data);
+    res.status(200).json(reviews);
+  });
+});
+
+// 保存评论数据
+app.post('/api/save-reviews', (req, res) => {
+  const { storeName, reviews } = req.body;
+
+  fs.readFile(reviewsDataFile, 'utf8', (err, data) => {
+    if (err) {
+      res.status(500).send('无法读取评论数据文件');
+      return;
+    }
+
+    let reviewsData = JSON.parse(data);
+    reviewsData[storeName] = reviews;
+
+    fs.writeFile(reviewsDataFile, JSON.stringify(reviewsData), 'utf8', err => {
+      if (err) {
+        res.status(500).send('无法保存评论数据');
+        return;
+      }
+      res.status(200).send('评论数据保存成功');
+    });
+  });
+});
+
+// 保存商店数据
+app.post('/api/save-store', (req, res) => {
+  const storeData = req.body;
+
+  fs.writeFile(storeDataFile, storeData.map(store => JSON.stringify(store)).join('\n') + '\n', 'utf8', err => {
+    if (err) {
+      res.status(500).send('无法保存商店数据');
+      return;
+    }
+    res.status(200).send('商店数据保存成功');
   });
 });
 
