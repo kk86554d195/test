@@ -12,126 +12,132 @@ const profileDataFile = path.join(__dirname, 'profile_data.txt');
 const reviewsDataFile = path.join(__dirname, 'reviews_data.txt');
 
 // 获取商店数据
-app.get('/api/get-data', (req, res) => {
+app.get('/api/get-stores', (req, res) => {
   fs.readFile(storeDataFile, 'utf8', (err, data) => {
     if (err) {
       console.error('无法读取商店数据文件:', err);
       res.status(500).send('无法读取商店数据文件-服务器错误');
       return;
     }
-
-    const lines = data.trim().split('\n');
-    const jsonData = lines.map(line => {
-      try {
-        return JSON.parse(line);
-      } catch (e) {
-        console.error('JSON 解析错误:', e);
-        return null;
-      }
-    }).filter(item => item !== null);
-
+    const jsonData = data.trim().split('\n').map(line => JSON.parse(line));
     res.status(200).json(jsonData);
   });
 });
 
-// 处理用户登录
+// 保存商店数据
+app.post('/api/save-store', (req, res) => {
+  const store = req.body;
+  fs.appendFile(storeDataFile, JSON.stringify(store) + '\n', err => {
+    if (err) {
+      console.error('无法保存商店数据:', err);
+      res.status(500).send('无法保存商店数据-服务器错误');
+      return;
+    }
+    res.status(200).send('商店数据已保存');
+  });
+});
+
+// 获取用户数据
+app.get('/api/get-user', (req, res) => {
+  fs.readFile(profileDataFile, 'utf8', (err, data) => {
+    if (err) {
+      console.error('无法读取用户数据文件:', err);
+      res.status(500).send('无法读取用户数据文件-服务器错误');
+      return;
+    }
+    const users = data.trim().split('\n').map(line => JSON.parse(line));
+    res.status(200).json(users);
+  });
+});
+
+// 保存用户数据
+app.post('/api/save-user', (req, res) => {
+  const user = req.body;
+  fs.appendFile(profileDataFile, JSON.stringify(user) + '\n', err => {
+    if (err) {
+      console.error('无法保存用户数据:', err);
+      res.status(500).send('无法保存用户数据-服务器错误');
+      return;
+    }
+    res.status(200).send('用户数据已保存');
+  });
+});
+
+// 获取评价数据
+app.get('/api/get-reviews', (req, res) => {
+  fs.readFile(reviewsDataFile, 'utf8', (err, data) => {
+    if (err) {
+      console.error('无法读取评价数据文件:', err);
+      res.status(500).send('无法读取评价数据文件-服务器错误');
+      return;
+    }
+    const reviews = data.trim().split('\n').map(line => JSON.parse(line));
+    res.status(200).json(reviews);
+  });
+});
+
+// 保存评价数据
+app.post('/api/save-review', (req, res) => {
+  const review = req.body;
+  fs.appendFile(reviewsDataFile, JSON.stringify(review) + '\n', err => {
+    if (err) {
+      console.error('无法保存评价数据:', err);
+      res.status(500).send('无法保存评价数据-服务器错误');
+      return;
+    }
+    res.status(200).send('评价数据已保存');
+  });
+});
+
+// 登录用户
 app.post('/api/login', (req, res) => {
   const { username, password } = req.body;
 
   fs.readFile(profileDataFile, 'utf8', (err, data) => {
     if (err) {
-      res.status(500).send('无法读取用户数据文件');
+      console.error('无法读取用户数据文件:', err);
+      res.status(500).send('无法读取用户数据文件-服务器错误');
       return;
     }
 
     const users = data.trim().split('\n').map(line => JSON.parse(line));
     const user = users.find(user => user.username === username);
 
-    if (!user) {
+    if (!user || user.password !== password) {
       res.status(401).json({ success: false, message: '用户名或密码错误' });
-    } else if (user.password === password) {
-      res.status(200).json({ success: true, memberName: user.memberName, favorites: user.favorites || [] });
-    } else {
-      res.status(401).json({ success: false, message: '用户名或密码错误' });
+      return;
     }
+
+    res.status(200).json({ success: true, memberName: user.memberName });
   });
 });
 
-// 保存用户资料
-app.post('/api/save-profile', (req, res) => {
-  const { username, memberName, favorites } = req.body;
+// 注册用户
+app.post('/api/register', (req, res) => {
+  const { username, password, memberName } = req.body;
 
   fs.readFile(profileDataFile, 'utf8', (err, data) => {
     if (err) {
-      res.status(500).send('无法读取用户数据文件');
+      console.error('无法读取用户数据文件:', err);
+      res.status(500).send('无法读取用户数据文件-服务器错误');
       return;
     }
 
-    let users = data.trim().split('\n').map(line => JSON.parse(line));
-    const userIndex = users.findIndex(user => user.username === username);
-
-    if (userIndex !== -1) {
-      users[userIndex] = { ...users[userIndex], memberName, favorites };
-    } else {
-      users.push({ username, memberName, favorites });
+    const users = data.trim().split('\n').map(line => JSON.parse(line));
+    if (users.find(user => user.username === username)) {
+      res.status(409).json({ success: false, message: '用户名已存在' });
+      return;
     }
 
-    fs.writeFile(profileDataFile, users.map(user => JSON.stringify(user)).join('\n') + '\n', 'utf8', err => {
+    const newUser = { username, password, memberName };
+    fs.appendFile(profileDataFile, JSON.stringify(newUser) + '\n', err => {
       if (err) {
-        res.status(500).send('无法保存用户数据');
+        console.error('无法保存用户数据:', err);
+        res.status(500).send('无法保存用户数据-服务器错误');
         return;
       }
-      res.status(200).send('用户数据保存成功');
+      res.status(200).json({ success: true });
     });
-  });
-});
-
-// 获取评论数据
-app.get('/api/get-reviews', (req, res) => {
-  fs.readFile(reviewsDataFile, 'utf8', (err, data) => {
-    if (err) {
-      res.status(500).send('无法读取评论数据文件');
-      return;
-    }
-
-    const reviews = JSON.parse(data);
-    res.status(200).json(reviews);
-  });
-});
-
-// 保存评论数据
-app.post('/api/save-reviews', (req, res) => {
-  const { storeName, reviews } = req.body;
-
-  fs.readFile(reviewsDataFile, 'utf8', (err, data) => {
-    if (err) {
-      res.status(500).send('无法读取评论数据文件');
-      return;
-    }
-
-    let reviewsData = JSON.parse(data);
-    reviewsData[storeName] = reviews;
-
-    fs.writeFile(reviewsDataFile, JSON.stringify(reviewsData), 'utf8', err => {
-      if (err) {
-        res.status(500).send('无法保存评论数据');
-        return;
-      }
-      res.status(200).send('评论数据保存成功');
-    });
-  });
-});
-
-// 保存商店数据
-app.post('/api/save-store', (req, res) => {
-  const storeData = req.body;
-
-  fs.writeFile(storeDataFile, storeData.map(store => JSON.stringify(store)).join('\n') + '\n', 'utf8', err => {
-    if (err) {
-      res.status(500).send('无法保存商店数据');
-      return;
-    }
-    res.status(200).send('商店数据保存成功');
   });
 });
 
