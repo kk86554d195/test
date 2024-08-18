@@ -82,10 +82,10 @@ app.get('/api/get-reviews', (req, res) => {
 
       const users = profileData.trim().split('\n').map(line => JSON.parse(line));
       const reviews = reviewsData.trim().split('\n').map(line => JSON.parse(line)).map(review => {
-        const user = users.find(user => user.username === review.username);
+        const user = users.find(user => user.account === review.account);
         return {
           ...review,
-          userName: user ? user.memberName : '未知用户'
+          username: user ? user.username : '未知用户'
         };
       });
 
@@ -107,21 +107,16 @@ app.post('/api/save-review', (req, res) => {
       return;
     }
 
-    // 將文件中的評價資料讀取成陣列
     let reviews = data.trim() ? data.trim().split('\n').map(line => JSON.parse(line)) : [];
 
-    // 查找是否已經存在該使用者對同一店家的評價
-    const reviewIndex = reviews.findIndex(review => review.username === newReview.username && review.storeName === newReview.storeName);
+    const reviewIndex = reviews.findIndex(review => review.account === newReview.account && review.storeName === newReview.storeName);
 
     if (reviewIndex !== -1) {
-      // 覆蓋現有的評價
       reviews[reviewIndex] = newReview;
     } else {
-      // 新增一條新評價
       reviews.push(newReview);
     }
 
-    // 將更新後的評價資料寫回文件
     fs.writeFile(reviewsDataFile, reviews.map(r => JSON.stringify(r)).join('\n') + '\n', (err) => {
       if (err) {
         console.error('无法保存评价数据:', err);
@@ -134,12 +129,9 @@ app.post('/api/save-review', (req, res) => {
 });
 
 
-
-
-
 // 登录用户
 app.post('/api/login', (req, res) => {
-  const { username, password } = req.body;
+  const { account, password } = req.body;
 
   fs.readFile(profileDataFile, 'utf8', (err, data) => {
     if (err) {
@@ -149,20 +141,20 @@ app.post('/api/login', (req, res) => {
     }
 
     const users = data.trim().split('\n').map(line => JSON.parse(line));
-    const user = users.find(user => user.username === username);
+    const user = users.find(user => user.account === account);
 
     if (!user || user.password !== password) {
-      res.status(401).json({ success: false, message: '用户名或密码错误' });
+      res.status(401).json({ success: false, message: '账号或密码错误' });
       return;
     }
 
-    res.status(200).json({ success: true, memberName: user.memberName });
+    res.status(200).json({ success: true, username: user.username });
   });
 });
 
 // 注册用户
 app.post('/api/register', (req, res) => {
-  const { username, password, memberName } = req.body;
+  const { account, password, username } = req.body;
 
   fs.readFile(profileDataFile, 'utf8', (err, data) => {
     if (err) {
@@ -172,12 +164,12 @@ app.post('/api/register', (req, res) => {
     }
 
     const users = data.trim().split('\n').map(line => JSON.parse(line));
-    if (users.find(user => user.username === username)) {
-      res.status(409).json({ success: false, message: '用户名已存在' });
+    if (users.find(user => user.account === account)) {
+      res.status(409).json({ success: false, message: '账号已存在' });
       return;
     }
 
-    const newUser = { username, password, memberName };
+    const newUser = { account, password, username };
     fs.appendFile(profileDataFile, JSON.stringify(newUser) + '\n', err => {
       if (err) {
         console.error('无法保存用户数据:', err);
@@ -188,9 +180,10 @@ app.post('/api/register', (req, res) => {
     });
   });
 });
-// 加入我的最愛
+
+// 加入我的最爱
 app.post('/api/add-favorite', (req, res) => {
-  const { username, storeName } = req.body;
+  const { account, storeName } = req.body;
 
   fs.readFile(favoritesDataFile, 'utf8', (err, data) => {
     let favorites = {};
@@ -205,11 +198,11 @@ app.post('/api/add-favorite', (req, res) => {
       favorites = JSON.parse(data);
     }
 
-    if (!favorites[username]) {
-      favorites[username] = [];
+    if (!favorites[account]) {
+      favorites[account] = [];
     }
-    if (!favorites[username].includes(storeName)) {
-      favorites[username].push(storeName);
+    if (!favorites[account].includes(storeName)) {
+      favorites[account].push(storeName);
     }
 
     fs.writeFile(favoritesDataFile, JSON.stringify(favorites, null, 2), err => {
@@ -223,9 +216,9 @@ app.post('/api/add-favorite', (req, res) => {
   });
 });
 
-// 移除我的最愛
+// 移除我的最爱
 app.post('/api/remove-favorite', (req, res) => {
-  const { username, storeName } = req.body;
+  const { account, storeName } = req.body;
 
   fs.readFile(favoritesDataFile, 'utf8', (err, data) => {
     let favorites = {};
@@ -240,8 +233,8 @@ app.post('/api/remove-favorite', (req, res) => {
       favorites = JSON.parse(data);
     }
 
-    if (favorites[username]) {
-      favorites[username] = favorites[username].filter(favorite => favorite !== storeName);
+    if (favorites[account]) {
+      favorites[account] = favorites[account].filter(favorite => favorite !== storeName);
 
       fs.writeFile(favoritesDataFile, JSON.stringify(favorites, null, 2), err => {
         if (err) {
@@ -257,7 +250,34 @@ app.post('/api/remove-favorite', (req, res) => {
   });
 });
 
+// 获取用户我的最爱的店家列表
+app.get('/api/get-favorites', (req, res) => {
+  const { account } = req.query;
 
+  fs.readFile(favoritesDataFile, 'utf8', (err, data) => {
+    if (err) {
+      console.error('无法读取收藏数据文件:', err);
+      res.status(500).send('无法读取收藏数据文件-服务器错误');
+      return;
+    }
+
+    const favorites = JSON.parse(data);
+    const userFavorites = favorites[account] || [];
+
+    fs.readFile(storeDataFile, 'utf8', (err, storeData) => {
+      if (err) {
+        console.error('无法读取商店数据文件:', err);
+        res.status(500).send('无法读取商店数据文件-服务器错误');
+        return;
+      }
+
+      const stores = storeData.trim().split('\n').map(line => JSON.parse(line));
+      const favoriteStores = stores.filter(store => userFavorites.includes(store.name));
+
+      res.status(200).json(favoriteStores);
+    });
+  });
+});
 
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
