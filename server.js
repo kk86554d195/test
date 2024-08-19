@@ -66,6 +66,8 @@ app.post('/api/save-user', (req, res) => {
 
 // 获取评价数据
 app.get('/api/get-reviews', (req, res) => {
+  const { storeName } = req.query; // 接收查询参数 storeName
+
   fs.readFile(reviewsDataFile, 'utf8', (err, reviewsData) => {
     if (err) {
       console.error('无法读取评价数据文件:', err);
@@ -81,18 +83,28 @@ app.get('/api/get-reviews', (req, res) => {
       }
 
       const users = profileData.trim().split('\n').map(line => JSON.parse(line));
-      const reviews = reviewsData.trim().split('\n').map(line => JSON.parse(line)).map(review => {
-        const user = users.find(user => user.account === review.account);
+      let reviews = reviewsData.trim().split('\n').map(line => JSON.parse(line));
+
+      // 如果 storeName 提供，只返回该店家的评论
+      if (storeName) {
+        reviews = reviews.filter(review => review.storeName === storeName);
+      }
+
+      // 合并用户数据
+      const enrichedReviews = reviews.map(review => {
+        const user = users.find(user => user.account === review.account); // 使用 account 而非 username
         return {
           ...review,
-          username: user ? user.username : '未知用户'
+          username: user ? user.username : '未知用户' // 将 account 匹配到对应的 username
         };
       });
 
-      res.status(200).json(reviews);
+      res.status(200).json(enrichedReviews);
     });
   });
 });
+
+
 
 
 
@@ -100,33 +112,45 @@ app.get('/api/get-reviews', (req, res) => {
 app.post('/api/save-review', (req, res) => {
   const newReview = req.body;
 
+  // 確保文件存在，若不存在則創建
   fs.readFile(reviewsDataFile, 'utf8', (err, data) => {
-    if (err) {
-      console.error('无法读取评价数据文件:', err);
-      res.status(500).send('无法读取评价数据文件-服务器错误');
+    if (err && err.code === 'ENOENT') {
+      // 如果文件不存在，創建一個空的文件
+      fs.writeFileSync(reviewsDataFile, '');
+      data = '';
+    } else if (err) {
+      console.error('無法讀取評價數據文件:', err);
+      res.status(500).send('無法讀取評價數據文件-服務器錯誤');
       return;
     }
 
     let reviews = data.trim() ? data.trim().split('\n').map(line => JSON.parse(line)) : [];
 
+    // 查找是否已經存在相同使用者對相同店家的評價
     const reviewIndex = reviews.findIndex(review => review.account === newReview.account && review.storeName === newReview.storeName);
 
     if (reviewIndex !== -1) {
+      // 如果找到相同的評價，進行覆蓋
       reviews[reviewIndex] = newReview;
     } else {
+      // 否則新增該評價
       reviews.push(newReview);
     }
 
+    // 將所有評價重新寫入文件
     fs.writeFile(reviewsDataFile, reviews.map(r => JSON.stringify(r)).join('\n') + '\n', (err) => {
       if (err) {
-        console.error('无法保存评价数据:', err);
-        res.status(500).send('无法保存评价数据-服务器错误');
+        console.error('無法保存評價數據:', err);
+        res.status(500).send('無法保存評價數據-服務器錯誤');
         return;
       }
-      res.status(200).send('评价数据已保存');
+      res.status(200).send('評價數據已保存');
     });
   });
 });
+
+
+
 
 
 // 登录用户
